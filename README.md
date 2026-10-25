@@ -126,7 +126,7 @@ https://cdn.jsdelivr.net/gh/rinuuan/blog-assets@main/mascot/chibi
 
 ## 许可
 
-Copyright © 2026 rinuuan，保留版权。
+Copyright © 2026 Euan Lin，保留版权。
 
 - 主题代码与文档采用 [PolyForm Noncommercial 1.0.0](LICENSES/PolyForm-Noncommercial-1.0.0.txt)
 - `mascot/` 中的角色图片采用 [CC BY-NC 4.0](LICENSES/CC-BY-NC-4.0.txt)

@@ -89,10 +89,10 @@
 
         root.setAttribute("data-theme", theme);
         root.setAttribute("data-lang", lang);
-        root.setAttribute("data-variant", variant || "simp");
+        root.setAttribute("data-variant", variant);
 
         // Mirror the resolved prefs onto browser-facing UI before first paint.
-        root.lang = lang === "zh" ? ((variant || "simp") === "trad" ? "zh-Hant" : "zh-Hans") : "en";
+        root.lang = lang === "zh" ? (variant === "trad" ? "zh-Hant" : "zh-Hans") : "en";
         var metas = document.querySelectorAll('meta[name="theme-color"]');
         for (var i = 0; i < metas.length; i++) {
           metas[i].setAttribute("content", theme === "dark" ? "#1a1915" : "#faf9f4");
@@ -144,7 +144,7 @@
         --glass-edge: inset 0 1px 0 color-mix(in srgb, var(--text-color) 9%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--text-color) 7%, transparent);
         --glass-drop: 0 5px 16px rgba(40, 36, 28, 0.10);
         --glass-drop-pop: 0 14px 32px rgba(40, 36, 28, 0.16);
-        /* Sage hover wash as an inset shadow layer - gradients can't be transitioned, inset shadows can. */
+        /* Animate hover tints with inset shadows. */
         --glass-tint: color-mix(in srgb, var(--accent-color) 18%, transparent);
         /* Motion system: shared easing curves. */
         --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -162,18 +162,17 @@
         --ease-spring: cubic-bezier(0.33, 1.36, 0.64, 1);
         /* Shared "spring in, calm out" hover transition (buttons, action icons, retry). */
         --hover-spring: background-color 0.3s var(--ease), color var(--theme-color-duration) var(--theme-ease), transform 0.3s var(--ease-spring);
-        /* Keep the section-break color separate so theme changes can tween it. */
+        /* Shared section-break mask. */
         --section-break: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
       }
 
-      /* Dark theme - warm charcoal (not cool grey) to match Anthropic's dark surfaces. */
+      /* Warm charcoal palette. */
       [data-theme="dark"] {
         color-scheme: dark;
         --bg-color: #1a1915;
         --text-color: #e4e1d8;
         --meta-color: #918e83;
         --accent-color: #a6c187;
-        --accent-bg: color-mix(in srgb, var(--accent-color) 10%, transparent);
         --danger-color: #d98d76;
         --btn-bg: rgba(255, 255, 255, 0.05);
         --border-color: #2d2b25;
@@ -368,7 +367,7 @@
         border: 1px solid transparent;
         border-radius: 30px;
         min-height: 40px;
-        /* Calm easing here = calm return; the hover state swaps in the spring for a lively entrance. */
+        /* Ease out; use spring easing on hover. */
         transition: background-color 0.3s var(--ease), color var(--theme-color-duration) var(--theme-ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
         font-weight: 500;
         font-size: 0.95rem;
@@ -385,10 +384,10 @@
         font-size: 0.9rem;
       }
 
-      /* Nav tabs rest quieter than body text (editorial hierarchy); hover + active still go accent. */
+      /* Keep inactive navigation labels muted. */
       .main-nav li a { color: var(--meta-color); }
 
-      /* Current-section marker; .is-active is set by a synchronous URL-matching script (flash-free). */
+      /* Set the active section before first paint. */
       .main-nav li a.is-active {
         background: var(--accent-bg);
         color: var(--accent-color);
@@ -410,7 +409,7 @@
         transition: var(--hover-spring), border-color 0.3s var(--ease);
       }
 
-      /* Press responds instantly (Apple-style ~0.1s). */
+      /* Keep press feedback immediate. */
       .read-more:active,
       .blog-pager a:active,
       .comment-toggle-btn:active,
@@ -504,8 +503,7 @@
         }
         .main-nav ul             { animation-delay: 0.07s; }
         .top-actions             { animation-delay: 0.12s; }
-        /* Keep the listing header static below the crossfade navigation. */
-        /* 404 hero staggers down the stack; idle bob is gated below for desktop pointers. */
+        /* Stagger the 404 hero while listing headers stay static. */
         .error-404 .error-bubble { animation-delay: 0.08s; }
         .error-404 .error-code   { animation-delay: 0.14s; }
         .error-404 .error-home   { animation-delay: 0.2s; }
@@ -607,7 +605,7 @@
         transform-origin: center;
         transition: transform var(--theme-duration) var(--theme-ease);
       }
-      /* The cut is a mask hole (black subtracts); parked off the disc in light so the sun is whole. */
+      /* Move the mask cutout off-disc to show the full sun. */
       .theme-ico .moon-cut {
         fill: #000;
         transform: translate(7px, -8px);
@@ -918,7 +916,7 @@
 
       h2.post-title {
         font-family: var(--serif);
-        /* Fluid like the header: ~1.85rem at laptop widths, up to 2.05rem on wide screens. */
+        /* Keep titles fluid between compact and wide layouts. */
         font-size: clamp(1.8rem, 1.62rem + 0.48vw, 2.05rem);
         max-width: 100%;
         min-width: 0;
@@ -926,12 +924,11 @@
         margin: 0 0 10px;
         line-height: 1.45;
         font-weight: 500;
-        /* Display tracking for big serif headlines; reset for CJK below. */
         letter-spacing: 0;
         word-break: break-all;
         overflow-wrap: anywhere;
         line-break: anywhere;
-        /* No own colour/transition - it would chase the body's theme fade and lag behind it. */
+        /* Inherit color to avoid a delayed theme transition. */
       }
 
       h2.post-title a {
@@ -1004,7 +1001,7 @@
         text-transform: uppercase;
         color: var(--meta-color);
         font-feature-settings: "onum" 1, "liga" 1;
-        /* The reserved 1.4em height would clip a wrapped second line - overlong eyebrows ellipsize instead. */
+        /* Ellipsize labels to fit the reserved height. */
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1026,11 +1023,11 @@
         overflow-wrap: anywhere;
         word-break: normal;
         line-break: anywhere;
-        /* Classical CJK hanging punctuation (Safari only). */
+        /* Allow hanging punctuation where supported. */
         hanging-punctuation: first allow-end;
       }
 
-      /* Lead paragraph - slightly larger editorial intro. No drop cap (CJK can't take one cleanly). */
+      /* Enlarge the opening paragraph. */
       .post-body.full-content > p:first-of-type {
         font-size: 1.22rem;
         line-height: 1.85;
@@ -1150,10 +1147,9 @@
         font-family: var(--serif);
         font-weight: 500;
         line-height: 1.35;
-        /* Inherit body color so theme changes and printing stay in sync. */
-        /* Headings escape the body's CJK justify. */
+        /* Keep headings left-aligned; inherit body color for theme and print. */
         text-align: left;
-        /* Editorial rhythm: more air above than below - a heading belongs to the text that follows it. */
+        /* Keep headings closer to the text below. */
         margin: 1.8em 0 0.5em;
         letter-spacing: 0;
         /* Anchor jumps shouldn't pin the heading to the viewport edge. */
@@ -1288,18 +1284,39 @@
         border-radius: 4px;
       }
 
-      /* Comfortable paragraph rhythm. */
-        /* Balance paragraph lines and reduce orphan words. */
+      /* Keep paragraph spacing even and reduce orphan words. */
       .post-body.full-content p { margin: 0 0 1.4em; text-wrap: pretty; }
 
       /* Set English metrics server-side for a stable first paint. */
       .post-outer.post-en .post-body.full-content,
       .post-outer.post-en .post-body.snippet-content {
         line-height: 1.7;
-        text-align: left;
+        text-align-last: start;
+        text-justify: inter-word;
+        line-break: auto;
         -webkit-hyphens: auto;
         hyphens: auto;
-        word-spacing: 0.05em;
+        /* Avoid short fragments on either side of an automatic hyphen. */
+        hyphenate-limit-chars: 7 3 3;
+        word-spacing: normal;
+        text-wrap: pretty;
+      }
+
+      .post-outer.post-en .post-body.full-content {
+        font-family: var(--serif);
+        font-size: 1.25rem;
+        line-height: 1.6;
+      }
+
+      .post-outer.post-en .post-body.full-content > p:first-of-type {
+        font-size: inherit;
+        line-height: inherit;
+      }
+
+      /* Keep linked prose on the same word boundaries as the surrounding text. */
+      .post-outer.post-en .post-body.full-content a {
+        word-break: normal;
+        line-break: auto;
       }
 
       .post-body.snippet-content { margin-bottom: 18px; }
@@ -1405,7 +1422,7 @@
         font-weight: 500;
       }
 
-      /* Related posts - hairline row list; on hover the title slides right and a sage arrow glides in. */
+      /* Related-post rows. */
       .related-posts ul {
         list-style: none;
         padding: 0;
@@ -1413,7 +1430,7 @@
       }
       .related-posts li { border-top: 1px solid var(--border-color); }
       .related-posts li:first-child { border-top: none; }
-      /* Close the list - the last row gets a bottom rule so the section doesn't trail off unfinished. */
+      /* Close the list with a bottom border. */
       .related-posts li:last-child { border-bottom: 1px solid var(--border-color); }
       .related-posts li a {
         display: block;
@@ -1755,9 +1772,7 @@
       #custom-comment-form-container:not(.is-expanded) iframe#comment-editor {
         transition: none;
       }
-      #custom-comment-form-container.is-relocating iframe#comment-editor {
-        opacity: 0;
-      }
+      #custom-comment-form-container.is-relocating iframe#comment-editor,
       #custom-comment-form-container[data-editor-state="loading"] iframe#comment-editor {
         opacity: 0;
       }
@@ -1844,7 +1859,7 @@
           transform: translateY(-0.75px);
         }
       }
-      /* ponytail: measured Blogger notice wrapping; recalibrate if its text or font changes. */
+      /* shortcut: measured Blogger notice heights; recalibrate when its text or fonts change. */
       @container comment-editor (min-width: 261px) {
         .comment-avatar-window-lower { --english-avatar-top: 138px; }
       }
@@ -2005,7 +2020,6 @@
       .comment-author {
         font-weight: 600;
         font-size: 0.95rem;
-        color: inherit;
       }
 
       .datetime {
@@ -2240,7 +2254,7 @@
         align-items: center;
         gap: 6px;
         min-height: 36px;
-        transition: var(--comment-theme-transition), transform 0.1s var(--ease);
+        transition: var(--comment-theme-transition);
         cursor: pointer;
         border: none;
         font-family: inherit;
@@ -2253,10 +2267,6 @@
 
       .reply-toggle-btn:focus-visible {
         background: var(--accent-bg) !important;
-      }
-
-      .reply-toggle-btn:active {
-        transform: scale(0.97);
       }
 
       .reply-toggle-btn svg {
@@ -2366,7 +2376,6 @@
         h2.post-title {
           font-size: 1.4rem;
           line-height: 1.4;
-          max-width: 100%;
           min-width: 0;
           line-break: anywhere;
         }
@@ -2577,7 +2586,7 @@
         margin-right: 7px;
         transition: color var(--theme-color-duration) var(--theme-ease);
       }
-      /* CJK has no italic face - keep Chinese upright. */
+      /* Keep Chinese hint text upright. */
       .reading-hint .lang-zh {
         font-style: normal;
       }
@@ -2635,7 +2644,7 @@
         left: 16px;
         bottom: 0;
         width: 172px;
-        z-index: 30;                  /* above the top toggles (z-10) so the open menu is never covered */
+        z-index: 30;                  /* Keep the figure above the top controls. */
         opacity: 0;
         transform: translateY(16px);
         transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
@@ -2669,12 +2678,12 @@
         50%      { transform: translateY(-6px); }
       }
 
-      /* Reduced motion: kill the idle bob and hover zooms; keep functional transitions. */
+      /* Stop idle motion and hover zooms; preserve positioning transforms. */
       @media (prefers-reduced-motion: reduce) {
         .mascot-img { animation: none; }
         .post-body img:hover,
         .featured-img-wrapper:hover img { transform: none; }
-        /* Popovers fade in place; not .mascot itself - its transform drives the edge-tuck positioning. */
+        /* Keep mascot positioning transforms; only flatten popovers. */
         .mascot-bubble,
         .mascot-menu { transform: none !important; }
       }
@@ -2690,7 +2699,7 @@
       [data-theme="dark"] .mascot-dragging .mascot-img {
         filter: brightness(0.92) saturate(0.94) drop-shadow(0 14px 24px rgba(0, 0, 0, 0.38));
       }
-      /* Size-slider drag: GPU-scale only (container box stays put so the menu doesn't jump). */
+      /* Scale the image without moving the settings menu. */
       .mascot-resizing .mascot-img {
         animation: none;
         filter: none;
@@ -2744,7 +2753,7 @@
         transition: opacity 0.3s var(--ease), transform 0.4s var(--ease-spring),
                     background-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
       }
-      /* Tail matches the bubble fill so it inverts in step. */
+      /* Match the tail to the bubble during theme changes. */
       .mascot-bubble::after {
         content: '';
         position: absolute;
@@ -2784,9 +2793,9 @@
         right: 26px;
       }
 
-      /* Tucked: rests half off-screen after snapping to a side; hover/tap peeks it back out. */
+      /* Tuck at the edge; reveal on hover or tap. */
       .mascot.is-tucked { opacity: 1; }
-      /* Peek art isn't mirror-symmetric; the left shift is tuned smaller to reveal the same amount of hand. */
+      /* Offset asymmetric peek art to expose equal hand widths. */
       .mascot.is-tucked.tuck-left  { transform: translateX(-52%); }
       .mascot.is-tucked.tuck-right { transform: translateX(54%); }
       .mascot.is-tucked .mascot-bubble { opacity: 0 !important; pointer-events: none !important; }
@@ -2883,10 +2892,10 @@
       .mascot-menu button[aria-pressed="true"]::after { content: '\2713'; font-size: 0.85em; }
       .mascot-menu hr { border: none; border-top: 1px solid var(--border-color); margin: 6px 5px; }
       .mascot-menu .menu-hide { color: var(--meta-color); }
-      /* Coral wash marks "remove"; the text stays themed - coral itself fails AA as text. */
+      /* Use coral only as a background to preserve text contrast. */
       .mascot-menu .menu-hide:hover { color: var(--text-color); background: color-mix(in srgb, var(--persimmon) 16%, transparent); }
 
-      /* Dark-mode contrast on the frosted panel: brighter hide label (AA) and lighter divider/slider track. */
+      /* Raise dark-panel label, divider, and slider contrast. */
       [data-theme="dark"] .mascot-menu .menu-hide {
         color: #a8a59b;
       }
@@ -2970,6 +2979,7 @@
         -webkit-tap-highlight-color: transparent;
         -webkit-user-select: none;
         user-select: none;
+        visibility: hidden;
         opacity: 0;
         transform: translateX(-100%);
         box-shadow: var(--glass-drop), var(--glass-edge), inset 0 0 0 100px transparent;
@@ -2977,7 +2987,7 @@
                     background-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
         pointer-events: none;
       }
-      .mascot-reopen.is-visible { opacity: 1; transform: translateX(0); pointer-events: auto; }
+      .mascot-reopen.is-visible { visibility: visible; opacity: 1; transform: translateX(0); pointer-events: auto; }
       .mascot-reopen svg {
         width: 20px;
         height: 20px;
@@ -3014,7 +3024,7 @@
       .mascot-reopen.side-right.is-visible:hover { transform: translateY(-2px); }
       .mascot-reopen.side-right.is-visible:active { transform: scale(0.94); }
       .mascot-reopen.side-right svg { margin-left: 0; margin-right: 4px; }
-      /* Detached into a full disc while dragged or settling - drop the hover tint. */
+      /* Remove hover tint while the handle is dragged or settling. */
       .mascot-reopen.is-grabbing,
       .mascot-reopen.is-settling {
         outline: none;
@@ -3039,7 +3049,6 @@
       @media (max-width: 600px) {
         .mascot { width: 96px; left: 8px; max-width: min(140px, 40vw) !important; }
         .mascot-bubble { max-width: min(150px, calc(100vw - 24px)); font-size: 0.8rem; }
-        .mascot-img { transition: filter 0.3s var(--ease); }
         .reading-hint:not(.is-shown),
         .mascot-menu:not(.is-open),
         .mascot-reopen:not(.is-visible) {
@@ -3048,7 +3057,7 @@
         }
       }
 
-      /* 404 hero - the mascot's moment; the corner companion's script bails when #error-404 is present. */
+      /* Use the 404 hero in place of the corner mascot. */
       .error-404 {
         text-align: center;
         padding: 30px 0 60px;
@@ -3328,7 +3337,7 @@
 
     <script type='text/javascript'>
       //<![CDATA[
-      // Define tag translation helpers before content parses to avoid post-paint rewrites.
+      // Translate labels before first paint.
       (function() {
           var DICT = {
               // Navigation
@@ -3336,7 +3345,7 @@
               "首页": { zh: "首页", en: "Home" },
               "首頁": { zh: "首页", en: "Home" },
 
-              // Currently used labels on the blog
+              // Blog labels
               "English": { zh: "英文", en: "English" },
               "中文": { zh: "中文", en: "Chinese" },
               "Novels": { zh: "小说", en: "Novels" },
@@ -3594,7 +3603,9 @@
             var checkQueued = false;
             var check = function() {
                 checkQueued = false;
-                var scrolling = navList.scrollWidth > nav.clientWidth + 1;
+                // Scroll-mode padding must not hide overflow inside the list itself.
+                var scrolling = navList.scrollWidth > nav.clientWidth + 1 ||
+                                navList.scrollWidth > navList.clientWidth + 1;
                 nav.classList.toggle('is-scrolling', scrolling);
                 if (scrolling !== wheelBound) {
                     wheelBound = scrolling;
@@ -3615,8 +3626,7 @@
             } else {
                 window.addEventListener('resize', scheduleCheck);
             }
-            // Re-check once the web fonts settle, since a swap can nudge the tabs
-            // across the overflow threshold.
+            // Recheck overflow after web fonts load.
             if (document.fonts && document.fonts.addEventListener) {
                 document.fonts.addEventListener('loadingdone', scheduleCheck);
             }
@@ -3666,8 +3676,7 @@
               <b:else/>
                 <script type='text/javascript'>
                   //<![CDATA[
-                  // Listing masthead - built HERE, before the post list parses, so the list
-                  // can never paint first and then be pushed down by a late insertion.
+                  // Insert the listing heading before posts parse to prevent layout shifts.
                   (function() {
                       var self = document.currentScript;
                       if (!self) return;
@@ -3702,7 +3711,7 @@
                               titleEn = String(y);
                           }
                       } else { return; }
-                      // textContent only - label/query come from the URL; never inject them as HTML.
+                      // Treat URL labels and queries as text, never HTML.
                       var bi = function(tag, cls, zh, en) {
                           var el = document.createElement(tag);
                           el.className = cls;
@@ -3954,8 +3963,7 @@
                           }, 8000);
                           document.body.appendChild(script);
                         };
-                        // Section is hidden until filled, so near-view observation is moot -
-                        // fetch at the first idle moment, with a safety timeout.
+                        // Fetch while idle; the section stays hidden until populated.
                         if ('requestIdleCallback' in window) {
                           requestIdleCallback(requestRelatedPosts, { timeout: 3500 });
                         } else {
@@ -4045,7 +4053,7 @@
 
       <script type='text/javascript'>
         //<![CDATA[
-        // Desktop margin rails - date (left) + read time (right); pure decoration on single posts, >=1024px.
+        // Decorative date and reading-time rails for desktop article pages.
         (function() {
             const postBody = document.querySelector('.post-body.full-content');
             if (!postBody) return;
@@ -4054,7 +4062,8 @@
             const parseDate = function() {
                 const time = document.querySelector('.post-date[datetime]');
                 if (time) {
-                    const date = new Date(time.getAttribute('datetime'));
+                    // Keep the publication date independent of the reader's time zone.
+                    const date = new Date(time.getAttribute('datetime').slice(0, 10) + 'T00:00:00');
                     if (!isNaN(date.getTime())) return date;
                 }
                 const m = window.location.pathname.match(/\/(\d{4})\/(\d{2})\//);
@@ -4066,14 +4075,14 @@
             const estimateReadMinutes = function(text) {
                 if (!text) return 1;
                 const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
-                // Strip CJK then count word-like runs for the English portion
+                // Exclude CJK characters from the English word count.
                 const noCjk = text.replace(/[\u4e00-\u9fff]/g, ' ');
                 const enWords = (noCjk.match(/[A-Za-z0-9]+/g) || []).length;
                 const minutes = cjk / 350 + enWords / 220;
                 return Math.max(1, Math.round(minutes));
             };
 
-            // Display strings for the side date rail (uppercase of the shared month table).
+            // Reuse the shared month names in the date rail.
             const EN_MONTHS = (window.__rinuanMonths || []).map(m => m.toUpperCase());
             const ZH_MONTHS = ['一月','二月','三月','四月','五月','六月',
                              '七月','八月','九月','十月','十一月','十二月'];
@@ -4133,7 +4142,7 @@
             const bar = document.createElement('button');
             bar.type = 'button';
             bar.className = 'reading-bar';
-            // Out of the tab order until visible; update() flips it with is-active.
+            // Keep the progress button out of the tab order while hidden.
             bar.setAttribute('tabindex', '-1');
             bar.setAttribute('aria-label', '返回顶部 / Back to top');
             const fill = document.createElement('div');
@@ -4141,7 +4150,7 @@
             bar.appendChild(fill);
             document.body.appendChild(bar);
 
-            // Bilingual hint pill - lang spans track the language toggle.
+            // Keep the reading hint in sync with the selected language.
             const hint = document.createElement('div');
             hint.className = 'reading-hint';
             hint.setAttribute('aria-hidden', 'true');
@@ -4160,7 +4169,7 @@
             };
             bar.addEventListener('click', toTop);
 
-            // Show the hint; if a duration is given, auto-hide after it.
+            // Auto-hide timed hints; keep hover hints visible.
             let hideTimer = null;
             const showHint = function(duration) {
                 hint.classList.add('is-shown');
@@ -4244,9 +4253,9 @@
             update();
         })();
 
-        // Mascot - chibi corner companion: greets, reacts to page events, murmurs when idle.
+        // Mascot interactions and saved preferences.
         (function() {
-            // The 404 page shows the mascot as its hero - skip here.
+            // The 404 page has its own mascot.
             if (document.getElementById('error-404')) return;
 
             var startMascot = function(bootFromInteraction) {
@@ -4272,14 +4281,14 @@
             try { chatLevel = localStorage.getItem(CHAT_KEY) || 'full'; } catch (e) {}
             if (chatLevel !== 'full' && chatLevel !== 'less' && chatLevel !== 'mute') chatLevel = 'full';
             var ambient = function() { return chatLevel === 'full'; };
-            // Stepless size: scale 0.6-1.6 over the per-viewport base width.
+            // Scale the viewport-specific width between 0.6 and 1.6.
             var SIZE_KEY = 'mascotScale';
             var mascotScale = 1;
             try { var sv = parseFloat(localStorage.getItem(SIZE_KEY)); if (sv) mascotScale = Math.min(1.6, Math.max(0.6, sv)); } catch (e) {}
 
             var wrap = document.createElement('div');
             wrap.className = 'mascot';
-            // The <img> starts srcless.
+            // Defer the image source until the mascot is armed.
             var L = function(simp, trad, en) {
                 return '<span class="lang-zh"><span class="variant-simp">' + simp + '</span><span class="variant-trad">' + trad + '</span></span><span class="lang-en">' + en + '</span>';
             };
@@ -4312,7 +4321,7 @@
             document.body.appendChild(menu);
             if (window.__rinuanTypesetTitles) window.__rinuanTypesetTitles(menu);
 
-            // Re-open handle - a light inline icon, no image to download.
+            // Use an inline icon for the reopen button.
             var reopen = document.createElement('button');
             reopen.className = 'mascot-reopen';
             reopen.type = 'button';
@@ -4365,7 +4374,7 @@
                 return text;
             };
 
-            // Flicker-free art swap: preload, then assign.
+            // Preload new expressions to avoid flicker.
             var loaded = { happy: true };
             var artToken = 0;
             var setArt = function(name, isPeek) {
@@ -4402,12 +4411,12 @@
                 pre.src = ART[name] || ART.happy;
             };
 
-            // Idle is declared up here (hoisted) so say() can reset it.
+            // Share the idle timer with say().
             var idleTimer = null;
             function resetIdle() {
                 if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
                 if (wrap.classList.contains('is-hidden') || !ambient()) return;
-                // Random 1-2 min gap - natural, not clockwork.
+                // Randomize the idle delay between one and two minutes.
                 idleTimer = setTimeout(function() {
                     if (ambient() && !wrap.classList.contains('is-hidden')) sayMoods(IDLE_MOODS);
                 }, 60000 + Math.random() * 60000);
@@ -4432,7 +4441,7 @@
                 if (bubbleTimer) clearTimeout(bubbleTimer);
                 bubbleTimer = setTimeout(function() { bubble.classList.remove('is-shown'); }, hold || 4800);
                 resetIdle();
-                // Don't tuck away mid-sentence - push the tuck past this line.
+                // Delay tucking until the dialogue finishes.
                 if (scheduleTuck) scheduleTuck();
             };
             document.addEventListener('rinuan:locale-change', function() {
@@ -4473,11 +4482,11 @@
                 }
                 say({ mood: m, zh: l.zh, en: l.en });
             };
-            // Which expressions each "draw from the pools" scenario may use.
+            // Expression pools for click and idle reactions.
             var CLICK_MOODS = ['surprised', 'angry', 'shy', 'excited', 'happy', 'confused'];
             var IDLE_MOODS = ['sleepy', 'sad', 'confused', 'shy'];
 
-            // 16 lines per expression; the key is the /chibi filename.
+            // Dialogue pools keyed by expression filename.
             var MOODS = {
                 happy: [
                     { zh: '今天份的我，准时上线陪你啦~', en: 'Today’s dose of me, clocking in to keep you company~' },
@@ -4625,7 +4634,7 @@
                 ]
             };
 
-            // Contextual lines - each scenario carries its own spread of fitting expressions.
+            // Dialogue for specific page events.
             var GREET = {
                 morning: [
                     { mood: 'happy',   zh: '早呀！起这么早，了不起哦~',   en: 'Morning! Up already? Impressive~' },
@@ -4754,8 +4763,7 @@
                 try { first = !localStorage.getItem(SEEN_KEY); if (first) localStorage.setItem(SEEN_KEY, '1'); } catch (e) {}
                 if (first) { say(pick(WELCOME), 6000); return; }
                 var lbl = currentLabel();
-                // hasOwnProperty: lbl comes from the URL - a name like "__proto__" would
-                // hit the prototype and hand pick() a non-array.
+                // URL labels must not resolve to inherited object properties.
                 if (lbl) { say(pick(Object.prototype.hasOwnProperty.call(LABEL_LINES, lbl) ? LABEL_LINES[lbl] : LABEL_DEFAULT), 5500); return; }
                 say(pick(GREET[timeKey()]), 5500);
             };
@@ -4790,8 +4798,7 @@
                 if (tuckTimer) { clearTimeout(tuckTimer); tuckTimer = null; }
                 if (peekWarmTimer) { clearTimeout(peekWarmTimer); peekWarmTimer = null; }
             };
-            // Flip the bubble below the figure when showing it above would clip the viewport
-            // top, or (on the right) reach up into the top-right toggle bar.
+            // Keep the bubble clear of the viewport edge and top controls.
             var updateBubbleSide = function(top, centerX) {
                 var fromSay = top === undefined;
                 if (fromSay) {
@@ -4800,7 +4807,7 @@
                 }
                 var onRight = centerX > window.innerWidth * 0.6;
                 var below = top < 96;
-                // Measured only on say() (not per drag frame): would the above-bubble cover the bar?
+                // Measure the top bar when showing dialogue, never per drag frame.
                 if (fromSay && !below && onRight) {
                     if (topActions) {
                         var bubbleH = bubble.offsetHeight || 72;
@@ -4815,8 +4822,7 @@
             var scheduleTuck = function() {
                 clearTuckTimers();
                 if (!snapSide) return;
-                // Warm the peek art shortly before the tuck, not during page load
-                // (and cancel stale warmups when the figure is moved again).
+                // Preload peek art shortly before tucking; cancel if the mascot moves.
                 peekWarmTimer = setTimeout(function() {
                     peekWarmTimer = null;
                     if (snapSide) warmPeek(snapSide);
@@ -4848,8 +4854,7 @@
                 wrap.style.top = t + 'px';
                 wrap.style.bottom = 'auto';
             };
-            // Never let a floating element rest over the fixed top-right toggle bar:
-            // if its box overlaps the bar, drop its top just below the bar.
+            // Move overlapping floating controls below the top bar.
             var dropBelowTopBar = function(left, top, w, h) {
                 if (!topActions) return top;
                 var br = topActions.getBoundingClientRect();
@@ -4858,13 +4863,12 @@
                 }
                 return top;
             };
-            // The figure's release snap uses it (shared with the reopen handle below).
+            // Apply the shared top-bar guard when snapping the mascot.
             var avoidTopBar = function(pos) {
                 pos.top = dropBelowTopBar(pos.left, pos.top, wrap.offsetWidth || dragW, wrap.offsetHeight || dragH);
                 return pos;
             };
-            // Looser clamp WHILE dragging (24px sliver stays on-screen) so the figure
-            // can be dragged off to hide. Uses the cached drag-start size - no reads.
+            // Keep 24px visible while dragging past an edge to hide the mascot.
             var dragClamp = function(l, t) {
                 var edge = 24;
                 return {
@@ -4913,7 +4917,7 @@
                 wrap.style.transition = '';
                 wrap.style.translate = '0 0';
             };
-            // On release, snap to the nearest edge (plain glide, no inertia) and remember the side.
+            // Snap to the nearest edge and save the side.
             var snapToEdge = function() {
                 cancelMotion();
                 var r = wrap.getBoundingClientRect();
@@ -4935,9 +4939,7 @@
             };
             // Dragging beyond an edge hides the mascot there.
             var dismissTo = function(side, y) {
-                cancelMotion();
                 snapSide = null; tucked = false;
-                clearTuckTimers();
                 wrap.classList.remove('is-tucked', 'tuck-left', 'tuck-right', 'mascot-dragging', 'mascot-will-hide');
                 setArt(currentMood, false);
                 hide(side, y);
@@ -4958,7 +4960,7 @@
                     motionTimer = null;
                     wrap.style.translate = '';
                     wrap.classList.remove('mascot-snapping');
-                    // hand back to CSS bottom-anchoring (same spot, now tracks bottom)
+                    // Restore CSS bottom anchoring.
                     wrap.style.left = ''; wrap.style.top = ''; wrap.style.bottom = '';
                 }, 400);
                 var homeLine = pickLineAvoidMood(HOME, currentMood);
@@ -5014,14 +5016,14 @@
                 try { imgEl.setPointerCapture(e.pointerId); } catch (er) {}
             });
             imgEl.addEventListener('pointermove', function(e) {
-                if (!dragging) return;
+                if (!dragging || e.isPrimary === false) return;
                 dragClientX = e.clientX;
                 dragClientY = e.clientY;
                 if (!dragFrame) dragFrame = requestAnimationFrame(applyDragFrame);
             });
             var lastTap = 0, tapTimer = null;
             var endDrag = function(e) {
-                if (!dragging) return;
+                if (!dragging || e.isPrimary === false) return;
                 if (dragFrame) {
                     cancelAnimationFrame(dragFrame);
                     dragFrame = 0;
@@ -5171,12 +5173,12 @@
                 }
             });
 
-            // Park the reopen handle on the edge the figure left from, clamped fully on-screen.
+            // Keep the reopen button visible on the selected edge.
             var REOPEN_KEY = 'mascotReopen';
             var placeReopen = function(side, y) {
                 var w = reopen.offsetWidth || 46, h = reopen.offsetHeight || 46;
                 reopen.classList.toggle('side-right', side === 'right');
-                // Always position via `left` so the release snap can transition it on either side.
+                // Use left-based positioning for snaps to either edge.
                 var left = side === 'right' ? (window.innerWidth - w) : 0;
                 reopen.style.left = left + 'px';
                 if (y == null) { reopen.style.top = ''; reopen.style.bottom = '16px'; return; }
@@ -5199,12 +5201,12 @@
                 wrap.style.transition = 'none';
                 wrap.style.translate = '';
                 wrap.style.transformOrigin = (side === 'right' ? 'right' : 'left') + ' bottom';
-                void wrap.offsetWidth; // commit the start frame
+                void wrap.offsetWidth; // Commit the start frame.
                 wrap.style.transition = 'opacity 0.2s var(--ease), transform 0.2s var(--ease-out)';
                 wrap.style.opacity = '0';
                 wrap.style.transform = 'scale(0.5)';
                 reopen.classList.add('is-visible'); // handle slides in, overlapping the exit
-                menuOpen(false, false);             // close the menu, and collapse the bar gear while hidden
+                menuOpen(false, false);
                 gear.classList.add('is-collapsed');
                 try { localStorage.setItem(HIDE_KEY, '1'); } catch (e) {}
                 try { localStorage.setItem(REOPEN_KEY, JSON.stringify({ side: side, y: Math.round(y) })); } catch (e) {}
@@ -5236,7 +5238,7 @@
                     var margin = window.innerWidth <= 600 ? 8 : 16;
                     var left = pos.side === 'right' ? (window.innerWidth - w - margin) : margin;
                     var c = clampPos(left, (pos.y || window.innerHeight / 2) - h / 2);
-                    // The figure is tall: summoned near the top-right its head would cover the bar.
+                    // Keep the restored mascot below the top controls.
                     c.top = dropBelowTopBar(c.left, c.top, w, h);
                     applyPos(c.left, c.top);
                     savePos(c.left, c.top);
@@ -5253,7 +5255,7 @@
                 resetIdle();
                 if (snapSide) scheduleTuck();
             };
-            // The handle is draggable along/across the edges (remembered); a plain tap still summons.
+            // Drag to reposition the reopen button; tap to show the mascot.
             reopen.style.touchAction = 'none';
             var reDragging = false, reMoved = false, reSX = 0, reSY = 0,
                 reBaseLeft = 0, reBaseTop = 0, reW = 46, reH = 46, reSwallowClick = false;
@@ -5290,13 +5292,13 @@
                 try { reopen.setPointerCapture(e.pointerId); } catch (er) {}
             });
             reopen.addEventListener('pointermove', function(e) {
-                if (!reDragging) return;
+                if (!reDragging || e.isPrimary === false) return;
                 reClientX = e.clientX;
                 reClientY = e.clientY;
                 if (!reDragFrame) reDragFrame = requestAnimationFrame(applyReopenDragFrame);
             });
             var reEnd = function(e) {
-                if (!reDragging) return;
+                if (!reDragging || e.isPrimary === false) return;
                 if (reDragFrame) {
                     cancelAnimationFrame(reDragFrame);
                     reDragFrame = 0;
@@ -5305,7 +5307,7 @@
                 reDragging = false;
                 try { reopen.releasePointerCapture(e.pointerId); } catch (er) {}
                 if (reMoved) {
-                    reSwallowClick = e.type !== 'pointercancel'; // a drag isn't a summon
+                    reSwallowClick = e.type !== 'pointercancel'; // Do not summon after a drag.
                     var r = reopen.getBoundingClientRect();
                     var side = (r.left + r.width / 2) < window.innerWidth / 2 ? 'left' : 'right';
                     var y = r.top + r.height / 2;
@@ -5355,7 +5357,7 @@
                 });
             };
             syncMenu();
-            // Size slider - GPU-transform preview while dragging (the menu must not shift under the thumb).
+            // Preview size with transforms so the menu stays still.
             var sizeSlider = menu.querySelector('.mascot-size');
             sizeSlider.value = mascotScale;
             var committedScale = mascotScale;
@@ -5380,8 +5382,7 @@
                 try { localStorage.setItem(SIZE_KEY, mascotScale); } catch (e) {}
             };
             sizeSlider.addEventListener('change', commitSize);
-            // The menu is a fixed, body-level popover that drops from the gear in the
-            // top-right bar, right-aligned to it and clamped to the viewport.
+            // Anchor the menu below the gear and clamp it to the viewport.
             var positionMenu = function() {
                 var gr = gear.getBoundingClientRect();
                 var mw = menu.offsetWidth || 180, mh = menu.offsetHeight || 240;
@@ -5444,7 +5445,7 @@
                 if (e.key === 'Escape' && menu.classList.contains('is-open')) menuOpen(false, true);
             });
 
-            // Throttled: raw scroll events would otherwise churn the idle timer hundreds of times per swipe.
+            // Throttle activity events to avoid resetting the timer on every scroll.
             var lastActivity = 0;
             var onActivity = function() {
                 var now = Date.now();
@@ -5476,7 +5477,7 @@
                 };
                 var reveal = function() {
                     wrap.classList.add('is-ready'); greet();
-                    // On phones, rest tucked at the left edge so the figure never covers the text.
+                    // Tuck mobile mascots at the left edge after the greeting.
                     if (window.innerWidth <= 600 && !snapSide) {
                         snapSide = 'left';
                         wrap.classList.add('tuck-left');
@@ -5498,7 +5499,7 @@
             }
             };
 
-            // Coarse pointers stay idle-deferred unless the settings control is used.
+            // Defer coarse-pointer startup until idle or keyboard/settings interaction.
             var booted = false;
             var bootEvents = window.matchMedia('(hover: hover) and (pointer: fine)').matches
                 ? ['pointermove', 'keydown', 'scroll']
@@ -5594,7 +5595,7 @@
         </b:section>
 
         <div class='copyright-text'>&#169; <span id='current-year'/> <data:blog.title/></div>
-        <!-- Inline, right after the span: the footer never paints a bare copyright line. -->
+        <!-- Set the year before the footer paints. -->
         <script type='text/javascript'>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
       </footer>
 
@@ -5606,12 +5607,12 @@
       document.addEventListener("DOMContentLoaded", () => {
         const root = document.documentElement;
 
-        // Content fade for the lang/variant toggles; targets cached once.
+        // Fade content during language and variant changes.
         const fadeTargets = document.querySelectorAll('.site-header, nav.main-nav, #main-content, .site-footer, .top-actions');
         let fading = false;
         const reduceContentMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const triggerContentFade = callback => {
-            if (fading) return; // rapid re-clicks mid-fade would stack overlapping timers
+            if (fading) return; // Ignore clicks during a fade.
             fading = true;
             fadeTargets.forEach(el => el.classList.add('content-fade-out'));
             let revealed = false;
@@ -5639,7 +5640,7 @@
             }, reduceContentMotion() ? 0 : 250);
         };
 
-        // Theme toggle - one direct DOM update; CSS runs every themed property on one clock.
+        // Keep theme colors synchronized.
         const themeToggle = document.getElementById("theme-toggle");
         let manualThemeChoice = false;
         const syncThemeUI = () => {
@@ -5728,8 +5729,7 @@
                 announceUserTheme(currentTheme, intentVersion);
                 return;
             }
-            // One class plus one attribute update: foreground colours switch together,
-            // while surface transitions safely retarget on rapid reversals.
+            // Retarget surface transitions when the theme changes again.
             applyThemeWithCommentSnapshot(targetTheme);
             if (reduceContentMotion()) {
                 requestAnimationFrame(() => {
@@ -5901,7 +5901,6 @@
           script.integrity = "sha384-lSi9aFkjJFq3Fe5HZNORU+TFYbMDZh6m2KHdolOWxKNew8tzqMIjj3X1e6D9htV4";
           script.crossOrigin = "anonymous";
           script.async = true;
-          script.setAttribute("data-rinuan-opencc", "1");
           const flush = ok => {
               openCCLoading = false;
               const queue = openCCQueue.splice(0);
@@ -5963,7 +5962,7 @@
           });
         };
 
-        // Initialize variant
+        // Restore the saved Chinese variant.
         let initialVariantTimer = null;
         if (root.getAttribute("data-variant") === "trad") {
           initialVariantTimer = setTimeout(() => {
@@ -6041,15 +6040,22 @@
                 post.classList.toggle('post-en', isEnglish);
                 if (isEnglish) {
                     body.setAttribute('lang', 'en');
+                    // Let legacy Blogger body text use the theme's reading size and font.
+                    body.querySelectorAll('span[style]').forEach(span => {
+                        if (span.style.fontFamily.toLowerCase() === 'times' && span.style.fontSize === 'medium') {
+                            span.style.removeProperty('font-family');
+                            span.style.removeProperty('font-size');
+                        }
+                    });
                 } else {
                     body.setAttribute('lang', zhLang);
                 }
 
-                // Mirror lang onto the title for the CSS :lang() word-break.
+                // Keep title and article language attributes aligned.
                 const title = post.querySelector('.post-title');
                 if (title) title.setAttribute('lang', isEnglish ? 'en' : zhLang);
 
-                // Lazy-loading + async decoding for article images (Blogger doesn't emit these).
+                // Fill missing image loading and decoding attributes.
                 body.querySelectorAll('img').forEach((img, idx) => {
                     if (!img.hasAttribute('decoding')) img.setAttribute('decoding', 'async');
                     improveBodyImageDelivery(img, idx);
@@ -6106,7 +6112,7 @@
         }
         formatCardDates(document);
 
-        // Masthead + dictionary live in earlier inline scripts (pre-paint); reuse the shared translator.
+        // Reuse the tag translator initialized before content renders.
         const translateTagsIn = window.__rinuanTranslateTags || function() {};
 
         translateTagsIn(document);
@@ -6119,7 +6125,8 @@
             const firstOlder = pager && pager.querySelector('a.older-link');
             if (!list || !firstOlder) return; // last page -> nothing to load
 
-            let nextUrl = firstOlder.getAttribute('href');
+            let nextUrl = new URL(firstOlder.getAttribute('href'), location.href).href;
+            const loadedPages = new Set();
             let loading = false, ended = false;
             let infiniteObserver = null;
             pager.style.display = 'none';
@@ -6143,8 +6150,7 @@
 
             const setStatus = html => { status.innerHTML = html; status.classList.add('is-visible'); };
             const statusCopy = (simp, trad, en) => '<span class="status-copy">' + L(simp, trad, en) + '</span>';
-            // aria-hidden keeps the decorative end mark silent. The end mark is the
-            // list's closing line, so suppress the footer's own hairline (no double rule).
+            // Use one decorative closing rule for the list and footer.
             const showEnd = () => {
                 setStatus('<span class="end-dingbat" aria-hidden="true">···</span>' + statusCopy('已加载全部文章', '已載入全部文章', 'All posts loaded'));
                 document.documentElement.classList.add('posts-ended');
@@ -6168,12 +6174,21 @@
                 }
                 loading = true;
                 setStatus('<span class="loading-dot" aria-hidden="true"></span>' + statusCopy('加载中', '載入中', 'Loading'));
-                fetch(nextUrl, { credentials: 'same-origin' })
+                const requestUrl = nextUrl;
+                fetch(requestUrl, { credentials: 'same-origin' })
                     .then(r => { if (!r.ok) throw 0; return r.text(); })
                     .then(html => {
                         const doc = new DOMParser().parseFromString(html, 'text/html');
+                        const pageList = doc.querySelector('.blog-posts');
+                        if (!pageList) throw new Error('Missing posts container');
+                        const older = doc.querySelector('.blog-pager a.older-link');
+                        const olderHref = older && older.getAttribute('href');
+                        const followingUrl = olderHref ? new URL(olderHref, requestUrl).href : null;
+                        if (followingUrl && (followingUrl === requestUrl || loadedPages.has(followingUrl))) {
+                            throw new Error('Circular pagination');
+                        }
                         const tmp = document.createElement('div');
-                        doc.querySelectorAll('.blog-posts .post-outer').forEach(p => {
+                        pageList.querySelectorAll('.post-outer').forEach(p => {
                             const k = keyOf(p);
                             if (k && seen.has(k)) return; // skip a post already on the page
                             if (k) seen.add(k);
@@ -6198,10 +6213,17 @@
                         if (window.__rinuanToVariant) {
                             appendedPosts.forEach(post => window.__rinuanToVariant(post));
                         }
-                        const older = doc.querySelector('.blog-pager a.older-link');
-                        nextUrl = older ? older.getAttribute('href') : null;
+                        loadedPages.add(requestUrl);
+                        nextUrl = followingUrl;
                         loading = false;
-                        if (nextUrl) { status.classList.remove('is-visible'); status.replaceChildren(); }
+                        if (nextUrl) {
+                            status.classList.remove('is-visible');
+                            status.replaceChildren();
+                            if (infiniteObserver) {
+                                infiniteObserver.unobserve(sentinel);
+                                infiniteObserver.observe(sentinel);
+                            }
+                        }
                         else { ended = true; showEnd(); }
                     })
                     .catch(() => { loading = false; showError(); });
@@ -6223,7 +6245,7 @@
     <b:if cond='data:view.isSingleItem'>
       <script type='text/javascript'>
         //<![CDATA[
-        // Comment module - the whole customised Blogger comment experience.
+        // Blogger comment controls.
         (function() {
             'use strict';
 
@@ -6234,7 +6256,7 @@
             const TEXT_COLLAPSE = '<span class="lang-zh"><span class="variant-simp">收起留言框</span><span class="variant-trad">收起留言框</span></span><span class="lang-en">Collapse comment box</span>';
             const TEXT_DELETE   = '<span class="lang-zh"><span class="variant-simp">删除</span><span class="variant-trad">刪除</span></span><span class="lang-en">Delete</span>';
 
-            // 2. Form lifecycle - main toggle plus inline reply relocation of the shared iframe.
+            // Move one shared editor between the main form and replies.
             function initFormLifecycle() {
                 const commentToggleBtn = document.getElementById("comment-toggle");
                 const commentsWrapper = document.querySelector(".comments-wrapper");
@@ -6244,7 +6266,6 @@
 
                 let formActionToken = 0;
                 let cancelPendingRelocation = null;
-                let setFormExpanded = null;
                 let mainToggleBusy = false;
                 let queuedMainToggle = false;
                 let replyHeightPending = false;
@@ -6360,7 +6381,7 @@
                         setEditorState("ready", iframe);
                     }
                 };
-                setFormExpanded = expanded => {
+                const setFormExpanded = expanded => {
                     const iframe = document.getElementById("comment-editor");
                     customFormContainer.classList.toggle("is-expanded", expanded);
                     customFormContainer.setAttribute("aria-hidden", expanded ? "false" : "true");
@@ -6643,7 +6664,7 @@
                     if (!iframe || !formInner) return;
                     // Keep the restoration window after the iframe to preserve DOM order.
                     if (avatarWindow && avatarWindow.parentNode === formInner) {
-                        // Reinserting even at the same position reloads the editor and loses its draft.
+                        // Avoid reinsertion: it reloads the editor and discards the draft.
                         if (iframe.nextSibling !== avatarWindow) formInner.insertBefore(iframe, avatarWindow);
                     } else if (!formInner.contains(iframe)) {
                         formInner.appendChild(iframe);
@@ -6697,13 +6718,12 @@
                     setEditorSrc(iframe, activeEditorParentId);
                 };
                 document.addEventListener("rinuan:locale-change", syncEditorLocale);
-                // Set when the user toggles before the iframe arrives - init must not force the form back open.
+                // Preserve toggles made before the iframe arrives.
                 let userToggled = false;
                 const setMainFormState = expanded => {
                     if (!commentToggleBtn) return;
                     if (expanded === "replying") {
-                        // The shared editor is controlled by the active reply link here;
-                        // the top button becomes a plain "write a comment" action.
+                        // In reply mode, the main button starts a new comment.
                         commentToggleBtn.removeAttribute("aria-controls");
                         commentToggleBtn.removeAttribute("aria-expanded");
                         commentToggleBtn.innerHTML = TEXT_WRITE;
@@ -6714,7 +6734,7 @@
                     commentToggleBtn.innerHTML = expanded ? TEXT_COLLAPSE : TEXT_WRITE;
                 };
 
-                // One-shot iframe initializer. Returns true once iframe is wrapped.
+                // Initialize once the editor iframe exists.
                 function initializeCommentIframe() {
                     const editorIframe = document.getElementById("comment-editor");
                     if (!editorIframe) return false;
@@ -6788,7 +6808,7 @@
                     return true;
                 }
 
-                // Init now, or watch for the iframe's arrival; 8s timeout covers posts with comments disabled.
+                // Wait briefly for a late Blogger iframe.
                 if (!initializeCommentIframe()) {
                     const iframeObserver = new MutationObserver(() => {
                         if (initializeCommentIframe()) iframeObserver.disconnect();
@@ -6802,8 +6822,7 @@
                     commentToggleBtn.addEventListener("click", e => {
                         e.preventDefault();
                         if (mainToggleBusy) {
-                            // Preserve the user's final intent without reversing a height
-                            // transition halfway through its computed height.
+                            // Queue clicks until the height transition finishes.
                             queuedMainToggle = !queuedMainToggle;
                             return;
                         }
@@ -6834,13 +6853,12 @@
                             const mainComments = document.getElementById("comments");
                             const formInner = customFormContainer.querySelector('.form-inner');
                             const wasExpanded = customFormContainer.classList.contains("is-expanded");
-                            // nextElementSibling: whitespace text nodes between tags must not defeat the check.
+                            // Ignore whitespace when checking the form's position.
                             const alreadyAtTop = customFormContainer.parentNode === commentsWrapper &&
                                                  customFormContainer.nextElementSibling === mainComments;
                             const relocateAndExpand = () => {
                                 if (actionToken !== formActionToken) return;
-                                // The old editor closes normally. Cover only the new
-                                // location, before it can produce its first visible frame.
+                                // Mask the new location only after the old editor closes.
                                 if (!alreadyAtTop) customFormContainer.classList.add("is-loading-mask");
                                 if (!alreadyAtTop) customFormContainer.classList.add("is-returning-main");
                                 if (mainComments && !alreadyAtTop) {
@@ -6889,8 +6907,7 @@
                     const replyBtn = e.target.closest(".comment-reply");
                     if (!replyBtn) return;
                     e.preventDefault();
-                    // Blogger also binds these data-comment-id links. Stop its target
-                    // handler so only this theme's shared main editor handles the reply.
+                    // Block Blogger's reply handler so only the shared editor responds.
                     e.stopPropagation();
                     const parentComment = replyBtn.closest(".comment");
                     if (!parentComment) return;
@@ -6915,8 +6932,7 @@
                     const parentId = parentComment && parentComment.id ?
                         parentComment.id.replace(/^c/, "") : null;
 
-                    // Clear any other active reply buttons synchronously so rapid clicks
-                    // cannot leave a stale delayed relocation behind.
+                    // Clear earlier reply selections before starting another relocation.
                     commentsWrapper.querySelectorAll(".comment-reply.cancel-active").forEach(btn => {
                         if (btn !== replyBtn) setReplyButtonState(btn, false);
                     });
@@ -6930,8 +6946,7 @@
 
                     const relocateAndExpand = () => {
                         if (actionToken !== formActionToken) return;
-                        // Do not cover the closing editor. Mount the mask while collapsed
-                        // at its destination so it owns the first expanded paint.
+                        // Mask the new location before its editor expands.
                         customFormContainer.classList.add("is-loading-mask");
                         if (iframe) {
                             if (canPreserveFrame) {
@@ -6994,8 +7009,7 @@
                     return isNaN(machineDate.getTime()) ? null : { date: machineDate, hasTime: hasTime };
                 }
 
-                // Blogger's default English display format, with no locale-dependent
-                // Date.parse call or numeric month/day ambiguity.
+                // Parse English dates explicitly to avoid locale-dependent Date.parse.
                 const raw = target.textContent.trim();
                 const english = raw.match(/^(?:[A-Za-z]+,\s*)?([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})(?:\s+(?:at\s+)?(\d{1,2}):(\d{2})\s*(AM|PM))?$/i);
                 if (!english) return null;
@@ -7110,7 +7124,7 @@
                     }
                 });
 
-                // YouTube-style reply folding via a grid-rows transition.
+                // Animate reply folding with grid rows.
                 commentScope.querySelectorAll(".comment-replies:not([data-folded])").forEach(thread => {
                     const ol = thread.querySelector("ol");
                     const nestedComments = thread.querySelectorAll(".comment");
@@ -7118,14 +7132,14 @@
 
                     const parentComment = thread.closest('.comment');
 
-                    // Add vertical trunk line connecting parent -> replies
+                    // Connect the parent comment to its replies.
                     if (parentComment && !parentComment.querySelector(':scope > .thread-trunk')) {
                         const trunk = document.createElement('div');
                         trunk.className = 'thread-trunk';
                         parentComment.insertBefore(trunk, parentComment.firstChild);
                     }
 
-                    // 2-level wrapper animates grid-template-rows 0fr <-> 1fr.
+                    // Nest the list so grid rows can collapse to zero.
                     const wrapper = document.createElement("div");
                     wrapper.id = "reply-thread-" + (++replyFoldId);
                     wrapper.className = "replies-grid-wrapper";
@@ -7189,17 +7203,13 @@
                         setReplyThreadState(!toggleBtn.classList.contains("expanded"));
                     };
 
-                    // Insert toggle button right after the wrapper
-                    if (wrapper.nextSibling) {
-                        wrapper.parentNode.insertBefore(toggleBtn, wrapper.nextSibling);
-                    } else {
-                        wrapper.parentNode.appendChild(toggleBtn);
-                    }
+                    // Place the toggle after its reply list.
+                    wrapper.parentNode.insertBefore(toggleBtn, wrapper.nextSibling);
 
                     thread.dataset.folded = "true";
                 });
 
-                // Add tree-branch visual element to each reply comment
+                // Draw a branch for each reply.
                 commentScope.querySelectorAll(".comment-replies .comment:not([data-branched])").forEach(childComment => {
                     const branch = document.createElement('div');
                     branch.className = 'yt-branch';
@@ -7241,12 +7251,11 @@
                     observedCommentsContainer = container;
                     commentObserver.observe(observedCommentsContainer, { childList: true, subtree: true });
                 }
-                // Initial pass runs synchronously: server-rendered comments fold before
-                // first paint, and the pre-fold CSS hide can never strand a reply thread.
+                // Fold server-rendered replies before the first paint.
                 restructureComments();
             }
 
-            // The script sits below the comments markup - safe to start immediately.
+            // Comment markup is already parsed.
             startObserving();
             // Initialize from parsed markup; the observer still catches a late iframe.
             if (document.readyState === "loading") {
